@@ -4,9 +4,12 @@ from tkinter import ttk, messagebox, filedialog
 import os
 import webbrowser
 import platform  # Platforma özgü komutlar için eklendi
+import sys
 
 # Yeni ve modern tema için
 import sv_ttk
+import ctypes
+from ctypes import wintypes
 
 # Import our separated modules
 import db_handler
@@ -14,6 +17,26 @@ import export_utils
 import config
 from PIL import Image, ImageTk
 
+import csv
+import datetime
+
+def enable_windows_dark_titlebar(window):
+    if sys.platform != "win32":
+        return
+
+    # 19 = Windows 10 2004+ Immersive Dark, 20 = Windows 11
+    DWMWA_USE_IMMERSIVE_DARK_MODE = 19
+
+    hwnd = window.winfo_id()
+    use_dark = ctypes.c_int(1)
+    res = ctypes.windll.dwmapi.DwmSetWindowAttribute(
+        wintypes.HWND(hwnd),
+        wintypes.DWORD(DWMWA_USE_IMMERSIVE_DARK_MODE),
+        ctypes.byref(use_dark),
+        ctypes.sizeof(use_dark)
+    )
+    if res != 0:
+        print(f"[DWM] Dark titlebar failed with code {res}")
 
 class ComponentTrackerApp:
     def __init__(self, root):
@@ -33,6 +56,21 @@ class ComponentTrackerApp:
 
         self._create_widgets()
         self.refresh_treeview()
+    def on_theme_change(self, event=None):
+        """
+        Theme combobox’undan seçim değiştiğinde tetiklenen metot.
+        """
+        new_theme = self.theme_var.get()
+        sv_ttk.set_theme(new_theme)
+        enable_windows_dark_titlebar(self.root)
+
+        # Seçimi ayarlara kaydet
+        settings = config.load_settings()
+        settings["theme"] = new_theme
+        config.save_settings(settings)
+
+        # Durum çubuğuna bilgi yaz
+        self.update_status(f"Theme set to {new_theme}")
 
     def on_close(self):
         # Update settings with current window size
@@ -53,6 +91,7 @@ class ComponentTrackerApp:
             if col in config.COLUMNS:
                 self.tree.column(col, width=w)
 
+
     def show_context_menu(self, event):
         iid = self.tree.identify_row(event.y)
         if iid:
@@ -64,6 +103,62 @@ class ComponentTrackerApp:
         if not self.selected_item_data:
             return
         self.update_status(f"Context Menu: Editing mode – {self.selected_item_data['name']}")
+
+    def import_csv(self):
+        # 1) Dosya seç
+        file_path = filedialog.askopenfilename(
+            title="Select CSV File",
+            filetypes=[("CSV Files", "*.csv *.txt")]
+        )
+        if not file_path:
+            return
+
+        try:
+            # 2) Dosyayı with bloğunda aç ve oku
+            with open(file_path, newline='', encoding='utf-8') as csvfile:
+                # A) Sniffer ile delimiter tespiti (opsiyonel, ama güvenli)
+                sample = csvfile.read(2048)
+                csvfile.seek(0)
+                try:
+                    dialect = csv.Sniffer().sniff(sample, delimiters=";, \t")
+                except csv.Error:
+                    dialect = csv.excel
+
+                reader = csv.DictReader(csvfile, dialect=dialect)
+                print("Detected delimiter:", repr(dialect.delimiter))
+                print("CSV headers:", reader.fieldnames)
+
+                count = 0
+                for row in reader:
+                    # 3) Header’ları normalize et (büyük/küçük harf + boşluk → snake_case)
+                    data = {}
+                    for h, v in row.items():
+                        key = h.strip().lower().replace(' ', '_')
+                        data[key] = v
+
+                    # 4) Gerekli alanlar var mı kontrol et
+                    if not data.get("name") or not data.get("drawer_code") or not data.get("quantity"):
+                        continue
+
+                    # 5) Tip dönüşümleri
+                    try:
+                        data["quantity"] = int(data["quantity"])
+                    except:
+                        data["quantity"] = 0
+                    if not data.get("added_date"):
+                        data["added_date"] = datetime.date.today().isoformat()
+
+                    # 6) Veritabanına ekle
+                    db_handler.add_component(data)
+                    count += 1
+
+            # 7) Döngü, with bloğu bitti → kullanıcıya bilgi ve yenile
+            messagebox.showinfo("Import Successful", f"{count} component(s) imported.")
+            self.refresh_treeview()
+
+        except Exception as e:
+            messagebox.showerror("Import Failed", f"An error occurred:\n{e}")
+
 
     def _create_widgets(self):
         """Creates the application's widgets."""
@@ -97,6 +192,19 @@ class ComponentTrackerApp:
         self.category_filter = ttk.Combobox(top_frame, textvariable=self.category_filter_var, state="readonly")
         self.category_filter.pack(side="left", padx=5)
         self.category_filter.bind("<<ComboboxSelected>>", lambda *args: self.filter_and_search())
+                # --- Theme Selector ---
+        ttk.Label(top_frame, text="Theme:", font=("Arial", 10)).pack(side="left", padx=(15, 5))
+        self.theme_var = tk.StringVar(value="dark")  # başlangıçta dark
+        theme_combo = ttk.Combobox(
+            top_frame,
+            textvariable=self.theme_var,
+            values=["light", "dark"],
+            state="readonly",
+            width=6
+        )
+        theme_combo.pack(side="left", padx=5)
+        theme_combo.bind("<<ComboboxSelected>>", self.on_theme_change)
+
 
         # --- Middle Frame: Treeview ---
         self.tree = ttk.Treeview(tree_frame, columns=config.COLUMNS, show='headings')
@@ -178,6 +286,7 @@ class ComponentTrackerApp:
         ttk.Button(button_frame, text="💾 Update", command=self.update_component, style="Info.TButton").pack(side="left", expand=True, fill="x", padx=5)
         ttk.Button(button_frame, text="🗑️ Delete", command=self.delete_selected, style="Danger.TButton").pack(side="left", expand=True, fill="x", padx=5)
         ttk.Button(button_frame, text="🧹 Clear Form", command=self.clear_form_and_selection).pack(side="left", expand=True, fill="x", padx=5)
+        ttk.Button(button_frame, text="📥 Import CSV", command=self.import_csv).pack(side="left", expand=True, fill="x", padx=5)
         ttk.Button(button_frame, text="📤 Export CSV", command=export_utils.export_to_csv, style="Warning.TButton").pack(side="left", expand=True, fill="x", padx=5)
         ttk.Button(button_frame, text="📄 Export PDF", command=export_utils.export_to_pdf, style="Primary.TButton").pack(side="left", expand=True, fill="x", padx=5)
 
@@ -202,6 +311,16 @@ class ComponentTrackerApp:
 
         self.update_status(f"Displayed {len(data or [])} components.")
         self.apply_column_widths()
+
+        def on_theme_change(self, event=None):
+            """
+            Kullanıcı tema seçimini değiştirdiğinde
+             hemen uygulanan metot.
+            """
+        sv_ttk.set_theme(self.theme_var.get())
+        # Windows başlık çubuğu koyu kalacaksa:
+        enable_windows_dark_titlebar(self.root)
+
 
     def update_category_filter(self):
         current_selection = self.category_filter_var.get()
@@ -412,10 +531,13 @@ class ComponentTrackerApp:
 # --- Application Entry Point ---
 if __name__ == "__main__":
     root = tk.Tk()
-    
-    # Set the theme before creating the app instance
-    # Options: "dark" or "light"
+
+    # 1) Tkinter pencere oluşturuldu
     sv_ttk.set_theme("dark")
-    
+    root.update_idletasks()                  # <-- önemli: önce iç UI render et
+
+    # 2) Başlık çubuğunu koyu moda geçir
+    enable_windows_dark_titlebar(root)
+
     app = ComponentTrackerApp(root)
     root.mainloop()

@@ -9,10 +9,11 @@ IMAGE_PREVIEW_SIZE = (200, 200)
 APP_DIR = os.path.join(os.getenv("LOCALAPPDATA"), "ComponentTracker")
 os.makedirs(APP_DIR, exist_ok=True)
 
-SETTINGS_FILE = "settings.json"
+SETTINGS_FILE = os.path.join(os.path.expanduser("~"), ".component_tracker_settings.json")
 DEFAULT_SETTINGS = {
     "window_size": (1300, 750),
-    "column_widths": {}
+    "column_widths": {},
+    "theme": "dark"  
 }
 
 def load_settings():
