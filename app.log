@@ -1,0 +1,23 @@
+2025-07-24 21:43:38,992 ERROR:Failed to apply width for column image_path
+Traceback (most recent call last):
+  File "c:\Users\merto\Documents\Stock-checking-system\main_app.py", line 281, in apply_column_widths
+    self.tree.column(col, width=w)
+  File "C:\Users\merto\AppData\Local\Programs\Python\Python312\Lib\tkinter\ttk.py", line 1218, in column
+    return _val_or_dict(self.tk, kw, self._w, "column", column)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\merto\AppData\Local\Programs\Python\Python312\Lib\tkinter\ttk.py", line 281, in _val_or_dict
+    res = tk.call(*(args + options))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: Invalid column index image_path
+2025-07-24 21:43:59,974 ERROR:Failed saving settings.
+Traceback (most recent call last):
+  File "c:\Users\merto\Documents\Stock-checking-system\main_app.py", line 47, in _save_settings
+    settings["column_widths"] = {col: self.tree.column(col, width=None) for col in config.COLUMNS}
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\merto\AppData\Local\Programs\Python\Python312\Lib\tkinter\ttk.py", line 1218, in column
+    return _val_or_dict(self.tk, kw, self._w, "column", column)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\merto\AppData\Local\Programs\Python\Python312\Lib\tkinter\ttk.py", line 281, in _val_or_dict
+    res = tk.call(*(args + options))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: Invalid column index image_path
