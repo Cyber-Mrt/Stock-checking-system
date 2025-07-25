@@ -8,6 +8,11 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 import db_handler
 import config
+from config import resource_path
+import json
+
+with open(resource_path("settings.json"), "r") as f:
+    settings = json.load(f)
 
 def export_to_csv(status_callback):
     """Exports all component data to a CSV file, reporting via status_callback."""

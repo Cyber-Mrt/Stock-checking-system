@@ -79,8 +79,7 @@ class ComponentTrackerApp:
         
         # Set the theme based on saved settings
         self.on_theme_change()
-
-    
+ 
 
     def _load_and_apply_settings(self):
         """Loads settings from config and applies them to the window."""

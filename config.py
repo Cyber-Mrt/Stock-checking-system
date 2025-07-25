@@ -1,7 +1,20 @@
 # config.py
 
 import json, os
+import sys
 
+def resource_path(relative_path):
+    """
+    PyInstaller --onefile veya --onedir modunda, dosyalar
+    sys._MEIPASS içinde açılır. Geliştirme ortamında ise current dir.
+    """
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    return os.path.join(base_path, relative_path)
+
+# Mevcut sabitlerin yanında:
+DB_NAME  = "components.db"
+COLUMNS  = ["id", "name", "category", "drawer_code", "quantity", "datasheet", "description", "image_path", "added_date"]
+APP_DIR  = os.path.join(os.path.expanduser("~"), "AppData", "Local", "ComponentTracker")
 
 # Uygulama dizininde "components.db" adında bir SQLite dosyası kullan
 DB_FILE = os.path.join(os.path.dirname(__file__), "components.db")

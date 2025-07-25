@@ -1,19 +1,28 @@
 # db_handler.py
 import sqlite3
 import datetime
-from config import DB_NAME, COLUMNS, APP_DIR
+from config import DB_NAME, COLUMNS, APP_DIR, resource_path
 import os
 import shutil
 import sqlite3
 import config
 
-# AppData klasörünü kullan
+# db_handler.py en üstüne ekle:
+import os
+
+# config.APP_DIR ile gelen yolu kesin oluştur
+os.makedirs(APP_DIR, exist_ok=True)
+
+
+
+# Eğer APP_DIR’yi kullanmaya devam edeceksen:
+os.makedirs(APP_DIR, exist_ok=True)
 LOCAL_DB_PATH = os.path.join(APP_DIR, DB_NAME)
+
+# Ancak PyInstaller paketinden doğrudan exe yanından okumak için:
+# LOCAL_DB_PATH = resource_path(DB_NAME)
 ORIGINAL_DB_PATH = os.path.join(os.path.dirname(__file__), DB_NAME)
 
-# Modül seviyesinde bir kez bağlantı aç
-conn = sqlite3.connect(config.DB_FILE)
-conn.row_factory = sqlite3.Row  # istersen kolay dict-okuma için
 
 # Eğer AppData'da yoksa, orijinal veritabanını kopyala
 if not os.path.exists(LOCAL_DB_PATH):
