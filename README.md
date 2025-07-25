@@ -266,14 +266,6 @@ Please describe your changes clearly and reference any related issues.
 
 ---
 
-## License
-
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
-
-Feel free to use, modify, and distribute this software under the terms of the MIT License.
-
----
-
 **Thank you for using Component Library Tracker!**
 
 For support or questions, please open an issue on GitHub.
