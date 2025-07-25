@@ -111,7 +111,6 @@ component-library-tracker/
 | `image_path`  | TEXT    | Path to an image file                |
 | `added_date`  | TEXT    | Date added (`YYYY-MM-DD`)            |
 
-The table is created automatically on application start if it does not already exist.
 
 ---
 
