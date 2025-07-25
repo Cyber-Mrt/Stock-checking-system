@@ -3,9 +3,9 @@
 **Component Library Tracker** is a powerful desktop application built with Python and Tkinter designed to help electronics enthusiasts, hobbyists, and professionals maintain and organize their component inventory with maximum efficiency. This README covers installation, configuration, usage, and development details.
 
 ---
-📷 Screenshots
+Screenshots
 
-![Main Window Screenshot](""pictures/app.png"")
+![Main Window Screenshot](pictures/app.png)
 
 Include additional screenshots as needed to showcase key parts of the application.
 
