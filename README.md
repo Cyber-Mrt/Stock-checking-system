@@ -9,7 +9,7 @@
 
 Below is an example of how you can include screenshots or images in your README. Place your image files (e.g., screenshot_main.png) in an assets/ directory and reference them like this:
 
-![Main Window Screenshot](""C:\Users\merto\Documents\Stock-checking-system\pictures\app.png"")
+![Main Window Screenshot](""pictures/app_screenshot.png"")
 
 
 
