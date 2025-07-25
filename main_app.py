@@ -101,16 +101,22 @@ class ComponentTrackerApp:
 
     def is_form_dirty(self):
         """
-        Formdaki alanlarla seçili item’ın eski değerlerini karşılaştırır.
-        Eğer en az birinde fark varsa True döner.
+        Hem güncelleme hem de yeni ekleme durumları için:
+        - Seçilmiş öğe varsa eski ve yeni değerleri karşılaştır.
+        - Yoksa (yeni ekleme), formdaki herhangi bir dolu alan kirli say.
         """
-        if not self.selected_item_data:
+        # Güncelleme için
+        if self.selected_item_data:
+            for key, entry in self.entries.items():
+                old = str(self.selected_item_data.get(key) or "").strip()
+                new = entry.get().strip()
+                if new != old:
+                    return True
             return False
 
-        for key, entry in self.entries.items():
-            old = str(self.selected_item_data.get(key) or "").strip()
-            new = entry.get().strip()
-            if new != old:
+        # Yeni ekleme için (tüm entry'leri kontrol et)
+        for entry in self.entries.values():
+            if entry.get().strip():
                 return True
         return False
 
@@ -366,32 +372,38 @@ class ComponentTrackerApp:
         self.apply_column_widths()
 
     def add_component(self):
-        """Adds a new component to the database."""
+        """Adds a new component to the database. Returns True on success, False on failure."""
         data = self.get_form_data()
-        if data is None: return
+        if data is None:
+            return False   # validation hatasında False dön
 
         if db_handler.add_component(data):
             self.update_status(f"Component '{data['name']}' added successfully.")
             self.refresh_treeview()
             self.clear_form_and_selection()
+            return True    # başarı
         else:
             messagebox.showerror("Database Error", "Failed to add the component.")
+            return False   # DB hatasında da False
 
     def update_component(self):
-        """Updates the selected component in the database."""
+        """Updates the selected component in the database. Returns True on success, False on failure."""
         if not self.selected_item_data:
             messagebox.showwarning("No Selection", "Please select a component to update.")
-            return
+            return False
 
         comp_id = self.selected_item_data['id']
         data = self.get_form_data()
-        if data is None: return
-        
+        if data is None:
+            return False  # validation hatasında False
+
         if db_handler.update_component(comp_id, data):
             self.update_status(f"Component '{data['name']}' updated successfully.")
-            self.refresh_treeview() 
+            self.refresh_treeview()
+            return True   # başarı
         else:
             messagebox.showerror("Database Error", "Failed to update the component.")
+            return False  # DB hatasında False
 
     def delete_selected(self):
         """Deletes the selected component after confirmation."""
@@ -434,21 +446,25 @@ class ComponentTrackerApp:
     def on_tree_click(self, event):
         region = self.tree.identify_region(event.x, event.y)
         if region == "nothing":
-            # eğer formda kaydedilmemiş değişiklik varsa sor
+            # 1) Formda değişiklik var mı?
             if self.is_form_dirty():
-                save = messagebox.askyesno(
-                    "Unsaved changes",
-                    "Yapılan değişiklikler kaydedilsin mi?"
+                kaydet = messagebox.askyesno(
+                    "Kaydedilsin mi?",
+                    "Formda yaptığınız değişiklikler kaydedilsin mi?"
                 )
-                if save:
-                    # update_component, seçili öğeyi güncelliyor
-                    self.update_component()
-                else:
-                    # eğer kaydetmezse, geri eski değerlere dönebiliriz
-                    # ama biz clear_form_and_selection ile sıfırlıyoruz
-                    pass
+                if kaydet:
+                    # 2) seçili öğe varsa update, yoksa add
+                    if self.selected_item_data:
+                        success = self.update_component()
+                    else:
+                        success = self.add_component()
+                    # 3) kaydetme başarısızsa (örneğin validation hatası)
+                    if not success:
+                        return    # temizlemeye geçme, formu olduğu gibi bırak
 
-            # en sonunda formu temizle ve selection kaldır
+                # eğer kaydet demediyse (kaydet=False), direkt temizle
+
+            # 4) en sonunda temizle
             self.clear_form_and_selection()
 
     def show_context_menu(self, event):
