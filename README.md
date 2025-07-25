@@ -91,47 +91,8 @@ component-library-tracker/
 
 ## Installation & Setup
 
-1. **Clone the repository**:
-
-   ```bash
-   git clone https://github.com/<your-username>/component-library-tracker.git
-   cd component-library-tracker
-   ```
-
-2. **Create and activate a virtual environment**:
-
-   ```bash
-   python -m venv venv  # Create venv
-   # Windows
-   venv\Scripts\activate
-   # macOS/Linux
-   source venv/bin/activate
-   ```
-
-3. **Install dependencies**:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Run the application**:
-
-   ```bash
-   python main_app.py
-   ```
-
-> On first launch, `components.db` will be created automatically in the project directory.
-
----
-
-## Configuration (`config.py`)
-
-The `config.py` module manages persistent user settings in a JSON file (`settings.json`):
-
-* **window\_size**: `(width, height)` of the main window
-* **theme**: `'light'` or `'dark'`
-* **column\_widths**: dictionary mapping each column to its width in pixels
-* **IMAGE\_PREVIEW\_SIZE**: fallback size `(width, height)` for image preview
+1. **Open Program-exe folder**
+2. **Run mysetup.exe**
 
 ### Functions
 
