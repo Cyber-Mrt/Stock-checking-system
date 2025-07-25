@@ -24,7 +24,6 @@ import export_utils
 import config
 
 
-
 def enable_windows_dark_titlebar(window):
     """
     Sets the title bar to dark mode on compatible Windows versions.
@@ -449,8 +448,8 @@ class ComponentTrackerApp:
             # 1) Formda değişiklik var mı?
             if self.is_form_dirty():
                 kaydet = messagebox.askyesno(
-                    "Kaydedilsin mi?",
-                    "Formda yaptığınız değişiklikler kaydedilsin mi?"
+                    "Save Changes?",
+                    "You have unsaved changes. Would you like to save them?"
                 )
                 if kaydet:
                     # 2) seçili öğe varsa update, yoksa add
