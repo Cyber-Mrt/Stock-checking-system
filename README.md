@@ -26,7 +26,6 @@ Screenshots
 13. [Error Handling and Validation](#error-handling-and-validation)
 14. [Extending the Application](#extending-the-application)
 15. [Contributing](#contributing)
-16. [License](#license)
 
 ---
 
@@ -85,8 +84,6 @@ component-library-tracker/
 ├── export_utils.py    # CSV & PDF export utilities
 ├── config.py          # Load/save application settings
 ├── components.db      # SQLite database (auto-created)
-├── requirements.txt   # Python dependencies
-└── assets/            # Optional assets (icons, sample CSV, etc.)
 ```
 
 ---
@@ -95,13 +92,6 @@ component-library-tracker/
 
 1. **Open Program-exe folder**
 2. **Run mysetup.exe**
-
-### Functions
-
-* `load_settings()`: Returns a dict of settings or defaults if none exist
-* `save_settings(settings)`: Writes the provided settings dict to disk
-
-Modify defaults in `config.py` to customize behavior before first run.
 
 ---
 
