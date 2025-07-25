@@ -6,7 +6,7 @@
 
 ## 📖 Table of Contents
 
-1. [Introduction](#introduction)
+1. [Introduction](#Introduction)
 2. [Key Features](#key-features)
 3. [Technology Stack](#technology-stack)
 4. [Project Structure](#project-structure)
