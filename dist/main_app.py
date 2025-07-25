@@ -150,6 +150,15 @@ class ComponentTrackerApp:
         status_bar.pack(side="bottom", fill="x")
 
         return top_frame, main_pane, bottom_container, button_frame, status_bar
+    
+    def component_exists(name, drawer_code):
+        """
+        Aynı name ve drawer_code ile bir kayıt var mı diye bakar.
+        Varsa True, yoksa False döner.
+        """
+        query = "SELECT 1 FROM components WHERE name = ? AND drawer_code = ?"
+        row = execute_query(query, (name, drawer_code), fetch="one")
+        return row is not None
 
     def _create_top_bar(self, parent_frame):
         """Creates search, filter, and theme selection widgets."""
@@ -283,6 +292,7 @@ class ComponentTrackerApp:
         ttk.Button(parent_frame, text="📤 Export CSV", command=lambda: export_utils.export_to_csv(self.update_status)).pack(side="left", expand=True, fill="x", padx=5)
         ttk.Button(parent_frame, text="📄 Export PDF", command=lambda: export_utils.export_to_pdf(self.update_status)).pack(side="left", expand=True, fill="x", padx=5)
         ttk.Button(parent_frame, text="📊 Category Chart", command=self.show_category_chart).pack(side="left", expand=True, fill="x", padx=5)
+    
     def _bind_events(self):
         """Binds all mouse and keyboard events."""
         # Treeview events
@@ -484,50 +494,60 @@ class ComponentTrackerApp:
     # --- Data Handling and Utility Methods ---
 
     def import_csv(self):
-        """Imports components from a user-selected CSV file."""
+        """Imports components from a user-selected CSV file, skipping exact duplicates."""
         file_path = filedialog.askopenfilename(
             title="Select CSV File",
             filetypes=[("CSV Files", "*.csv"), ("Text Files", "*.txt"), ("All Files", "*.*")]
         )
-        if not file_path: return
+        if not file_path:
+            return
 
         try:
-            with open(file_path, newline='', encoding='utf-8-sig') as csvfile: # utf-8-sig handles BOM
-                # Use Sniffer to detect CSV dialect (delimiter, etc.)
+            with open(file_path, newline='', encoding='utf-8-sig') as csvfile:
+                # CSV sniffer vs. fallback
                 try:
                     dialect = csv.Sniffer().sniff(csvfile.read(2048), delimiters=";,\t|")
                     csvfile.seek(0)
                 except csv.Error:
-                    # Fallback to standard Excel dialect if sniffing fails
                     dialect = 'excel'
                     csvfile.seek(0)
-                
+
                 reader = csv.DictReader(csvfile, dialect=dialect)
-                
-                # Normalize headers to snake_case for consistency
                 reader.fieldnames = [h.strip().lower().replace(' ', '_') for h in reader.fieldnames]
 
-                count = 0
+                count_new = 0
+                count_skipped = 0
+
                 for row in reader:
-                    # Skip rows missing essential data
-                    if not all(k in row for k in ["name", "drawer_code", "quantity"]):
+                    # temel alanlar yoksa atla
+                    if not all(k in row for k in ("name", "drawer_code", "quantity")):
                         continue
 
-                    # Sanitize data and provide defaults
-                    data = {key: val.strip() for key, val in row.items()}
+                    # string→int dönüşümleri vs.
+                    data = {k: v.strip() for k, v in row.items()}
                     try:
                         data["quantity"] = int(data["quantity"])
                     except (ValueError, TypeError):
-                        data["quantity"] = 0 # Default to 0 if not a valid number
-                    
+                        data["quantity"] = 0
+
+                    # eğer zaten bu ikili varsa atla
+                    if db_handler.component_exists(data["name"], data["drawer_code"]):
+                        count_skipped += 1
+                        continue
+
+                    # yoksa ekle
                     if not data.get("added_date"):
                         data["added_date"] = datetime.date.today().isoformat()
 
                     db_handler.add_component(data)
-                    count += 1
-            
-            messagebox.showinfo("Import Successful", f"{count} component(s) imported.")
-            self.refresh_treeview()
+                    count_new += 1
+
+                messagebox.showinfo(
+                    "Import Complete",
+                    f"{count_new} new component(s) imported.\n"
+                    f"{count_skipped} duplicate(s) skipped."
+                )
+                self.refresh_treeview()
 
         except Exception as e:
             messagebox.showerror("Import Failed", f"An error occurred:\n{e}")

@@ -47,6 +47,15 @@ def get_category_counts():
     print(f"[DEBUG] get_category_counts returned: {rows}")
     return rows
 
+def component_exists(name, drawer_code):
+    """
+    Aynı name + drawer_code ikilisiyle bir kayıt var mı diye bakar.
+    Varsa True, yoksa False döner.
+    """
+    query = "SELECT 1 FROM components WHERE name = ? AND drawer_code = ?"
+    row = execute_query(query, (name, drawer_code), fetch="one")
+    return row is not None
+
 def create_connection():
     try:
         return sqlite3.connect(LOCAL_DB_PATH)

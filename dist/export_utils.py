@@ -1,79 +1,89 @@
 # export_utils.py
 import csv
+import os
 from tkinter import filedialog, messagebox
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 import db_handler
+import config
 
-def export_to_csv():
-    """Exports all component data to a CSV file."""
-    file_path = filedialog.asksaveasfilename(
+def export_to_csv(status_callback):
+    """Exports all component data to a CSV file, reporting via status_callback."""
+    path = filedialog.asksaveasfilename(
         defaultextension=".csv",
-        filetypes=[("CSV files", "*.csv")]
+        filetypes=[("CSV Files", "*.csv")],
+        title="Save CSV As"
     )
-    if not file_path:
+    if not path:
         return
 
-    components = db_handler.get_all_components()
-    if components is None:
-        messagebox.showerror("Error", "Could not fetch data from the database.")
-        return
-
-    headers = ["ID", "Name", "Category", "Drawer Code", "Quantity", "Datasheet", "Description", "Added Date", "Image Path"]
+    # Sütun başlıkları (config'den okunup 'id' ve 'image_path' dışlanabilir)
+    headers = [config.COLUMN_TITLES[c] for c in config.COLUMNS if c not in ("id","image_path")]
 
     try:
-        with open(file_path, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
+        rows = db_handler.get_all_components()
+        if rows is None:
+            raise RuntimeError("Database returned no data.")
+
+        with open(path, 'w', newline='', encoding='utf-8-sig') as f:
+            writer = csv.writer(f)
             writer.writerow(headers)
-            writer.writerows(components)
-        messagebox.showinfo("Success", f"Data successfully exported to:\n{file_path}")
-    except Exception as e:
-        messagebox.showerror("Error", f"Failed to export to CSV.\nError: {e}")
+            # Her row bir tuple; yine 'id' ve 'image_path' indekslerini atlayarak yazıyoruz
+            for row in rows:
+                writer.writerow([row[i] for i, c in enumerate(config.COLUMNS) if c not in ("id","image_path")])
 
-def export_to_pdf():
-    """Exports all component data to a PDF file."""
-    file_path = filedialog.asksaveasfilename(
+        status_callback(f"Export CSV ✓ ({os.path.basename(path)})")
+        messagebox.showinfo("Export CSV", f"Successfully exported to:\n{path}")
+    except Exception as e:
+        status_callback("Export CSV ✗")
+        messagebox.showerror("Export CSV Failed", str(e))
+
+
+def export_to_pdf(status_callback):
+    """Exports all component data to a PDF file, reporting via status_callback."""
+    path = filedialog.asksaveasfilename(
         defaultextension=".pdf",
-        filetypes=[("PDF files", "*.pdf")]
+        filetypes=[("PDF Files", "*.pdf")],
+        title="Save PDF As"
     )
-    if not file_path:
+    if not path:
         return
 
     try:
-        doc = SimpleDocTemplate(file_path, pagesize=landscape(letter))
-        elements = []
+        rows = db_handler.get_all_components()
+        if rows is None:
+            raise RuntimeError("Database returned no data.")
+
+        doc = SimpleDocTemplate(path, pagesize=landscape(letter))
         styles = getSampleStyleSheet()
+        elements = [Paragraph("Component Library Export", styles['Title'])]
 
-        elements.append(Paragraph("Component Library List", styles['h1']))
-
-        headers = ["ID", "Name", "Category", "Drawer", "Qty", "Datasheet", "Description", "Date", "Image"]
-        components_data = db_handler.get_all_components()
-        if components_data is None:
-             messagebox.showerror("Error", "Could not fetch data for PDF export.")
-             return
-
+        # Tablo veri hazırlığı
+        headers = [config.COLUMN_TITLES[c] for c in config.COLUMNS if c not in ("id","image_path")]
         data = [headers]
-        for comp in components_data:
-            row = [Paragraph(str(item) if item is not None else "", styles['Normal']) for item in comp]
-            data.append(row)
+        for row in rows:
+            data.append([str(row[i]) for i, c in enumerate(config.COLUMNS) if c not in ("id","image_path")])
 
-        table = Table(data, colWidths=[30, 100, 70, 70, 30, 100, 140, 60, 80])
+        # Tablo oluştur ve stil uygula
+        table = Table(data, repeatRows=1)
         style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ("BACKGROUND", (0,0), (-1,0), colors.darkblue),
+            ("TEXTCOLOR",  (0,0), (-1,0), colors.whitesmoke),
+            ("ALIGN",      (0,0), (-1,-1), "CENTER"),
+            ("FONTNAME",   (0,0), (-1,0), "Helvetica-Bold"),
+            ("FONTSIZE",   (0,0), (-1,0), 12),
+            ("BOTTOMPADDING", (0,0), (-1,0), 8),
+            ("GRID",       (0,0), (-1,-1), 0.5, colors.grey),
         ])
         table.setStyle(style)
         elements.append(table)
 
         doc.build(elements)
-        messagebox.showinfo("Success", f"Data successfully exported to PDF:\n{file_path}")
+
+        status_callback(f"Export PDF ✓ ({os.path.basename(path)})")
+        messagebox.showinfo("Export PDF", f"Successfully exported to:\n{path}")
     except Exception as e:
-        messagebox.showerror("Error", f"Failed to export to PDF.\nError: {e}")
+        status_callback("Export PDF ✗")
+        messagebox.showerror("Export PDF Failed", str(e))
