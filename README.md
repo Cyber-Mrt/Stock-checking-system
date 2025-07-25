@@ -7,8 +7,6 @@ Screenshots
 
 ![Main Window Screenshot](pictures/app.png)
 
-Include additional screenshots as needed to showcase key parts of the application.
-
 ## Table of Contents
 
 1. [Introduction](#Introduction)
