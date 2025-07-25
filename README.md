@@ -6,6 +6,7 @@
 Screenshots
 
 ![Main Window Screenshot](pictures/app.png)
+![Main Window Screenshot](pictures/one.jpg).
 
 ## Table of Contents
 
