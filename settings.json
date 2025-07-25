@@ -1,17 +1,17 @@
 {
   "window_size": [
-    1300,
-    750
+    1920,
+    1009
   ],
   "column_widths": {
     "id": 0,
-    "name": 208,
-    "category": 158,
-    "drawer_code": 158,
-    "quantity": 119,
-    "datasheet": 209,
-    "description": 258,
-    "added_date": 148,
+    "name": 297,
+    "category": 247,
+    "drawer_code": 244,
+    "quantity": 209,
+    "datasheet": 297,
+    "description": 347,
+    "added_date": 237,
     "image_path": 0
   }
 }
