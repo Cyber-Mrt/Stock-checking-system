@@ -2,6 +2,10 @@
 
 import json, os
 
+
+# Uygulama dizininde "components.db" adında bir SQLite dosyası kullan
+DB_FILE = os.path.join(os.path.dirname(__file__), "components.db")
+
 # Bu satırı config.py dosyanıza ekleyin
 IMAGE_PREVIEW_SIZE = (200, 200)
 

@@ -4,10 +4,16 @@ import datetime
 from config import DB_NAME, COLUMNS, APP_DIR
 import os
 import shutil
+import sqlite3
+import config
 
 # AppData klasörünü kullan
 LOCAL_DB_PATH = os.path.join(APP_DIR, DB_NAME)
 ORIGINAL_DB_PATH = os.path.join(os.path.dirname(__file__), DB_NAME)
+
+# Modül seviyesinde bir kez bağlantı aç
+conn = sqlite3.connect(config.DB_FILE)
+conn.row_factory = sqlite3.Row  # istersen kolay dict-okuma için
 
 # Eğer AppData'da yoksa, orijinal veritabanını kopyala
 if not os.path.exists(LOCAL_DB_PATH):
@@ -16,6 +22,30 @@ if not os.path.exists(LOCAL_DB_PATH):
         print("Veritabanı AppData dizinine kopyalandı.")
     except Exception as e:
         print(f"Veritabanı kopyalanamadı: {e}")
+
+def get_category_counts():
+    """
+    Her kategori için toplam quantity değerini döner:
+      [ (kategori1, toplam_adet1), (kategori2, toplam_adet2), ... ]
+    """
+    # AppData içindeki gerçek DB dosyası:
+    db_path = os.path.join(APP_DIR, DB_NAME)
+    print(f"[DEBUG] get_category_counts connecting to: {db_path}")
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT category, SUM(quantity) AS total_qty
+          FROM components
+         WHERE category IS NOT NULL
+           AND category <> ''
+         GROUP BY category
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+
+    print(f"[DEBUG] get_category_counts returned: {rows}")
+    return rows
 
 def create_connection():
     try:
