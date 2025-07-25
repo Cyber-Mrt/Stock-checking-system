@@ -219,7 +219,7 @@ class ComponentTrackerApp:
         col_index = int(col_id.replace("#","")) - 1     # 0‑based index
         col_name = config.COLUMNS[col_index]
 
-        # Eğer drawer_code sütunuysa, özel popup göster
+        # if the column is "image_path", show the image preview
         if col_name == "drawer_code":
             row_id = self.tree.identify_row(event.y)
             if not row_id:
@@ -236,7 +236,7 @@ class ComponentTrackerApp:
             txt.pack(expand=True, fill="both", padx=10, pady=10)
             return
 
-        # değilse eskiden datasheet açan fonksiyonu çağır
+        # if not call self.selected_item_data:
         self.open_datasheet(event)    
 
     def _create_bottom_pane(self, parent_container):
