@@ -7,7 +7,7 @@
 
 📷 Screenshots
 
-![Main Window Screenshot](""pictures/app_screenshot.png"")
+![Main Window Screenshot](""pictures"")
 
 Include additional screenshots as needed to showcase key parts of the application.
 
