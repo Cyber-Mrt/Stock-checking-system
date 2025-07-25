@@ -4,7 +4,7 @@
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
 1. [Introduction](#Introduction)
 2. [Key Features](#key-features)
@@ -25,7 +25,7 @@
 
 ---
 
-## 📝 Introduction
+## Introduction
 
 Component Library Tracker provides a user-friendly graphical interface for tracking electronic components. Each record can include:
 
@@ -42,7 +42,7 @@ All data is stored in an SQLite database (`components.db`) that is automatically
 
 ---
 
-## 🔑 Key Features
+## Key Features
 
 * **CRUD Operations**: Add, update, and delete components
 * **Form Dirty-Check**: Warns before losing unsaved changes
@@ -57,7 +57,7 @@ All data is stored in an SQLite database (`components.db`) that is automatically
 
 ---
 
-## 🛠 Technology Stack
+## Technology Stack
 
 * **Python 3.8+**
 * **Tkinter** for GUI
@@ -71,7 +71,7 @@ All data is stored in an SQLite database (`components.db`) that is automatically
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 component-library-tracker/
@@ -86,7 +86,7 @@ component-library-tracker/
 
 ---
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 
 1. **Clone the repository**:
 
@@ -121,7 +121,7 @@ component-library-tracker/
 
 ---
 
-## ⚙️ Configuration (`config.py`)
+## Configuration (`config.py`)
 
 The `config.py` module manages persistent user settings in a JSON file (`settings.json`):
 
@@ -139,7 +139,7 @@ Modify defaults in `config.py` to customize behavior before first run.
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 **Table: `components`**
 
@@ -159,7 +159,7 @@ The table is created automatically on application start if it does not already e
 
 ---
 
-## 🎨 User Interface Overview
+## User Interface Overview
 
 * **Top Bar**: Search box, Category filter, Theme selector
 * **Treeview**: Displays a list of components with columns for each field (except `id` and `image_path`)
@@ -172,7 +172,7 @@ All elements resize and reposition gracefully using Tkinter layouts.
 
 ---
 
-## 📑 Import and Export
+## Import and Export
 
 ### CSV Import
 
@@ -194,7 +194,7 @@ Exported files are saved in the application directory or a user‑selected folde
 
 ---
 
-## 📊 Chart and Visualization
+## Chart and Visualization
 
 * **Category Distribution**: A live pie chart showing the percentage breakdown of components by category
 * **Matplotlib**: Configured with a dark background (for dark theme) and white text
@@ -203,7 +203,7 @@ Exported files are saved in the application directory or a user‑selected folde
 
 ---
 
-## 🌗 Theming and Dark Mode Support
+## Theming and Dark Mode Support
 
 * **sv\_ttk.set\_theme('light'/'dark')** applies consistent theme across widgets
 * **Windows Dark Title Bar**: Uses ctypes to call DWM API and enable immersive dark mode on supported Windows builds
@@ -212,7 +212,7 @@ Exported files are saved in the application directory or a user‑selected folde
 
 ---
 
-## ⌨️ Keyboard Shortcuts & Context Menu
+## Keyboard Shortcuts & Context Menu
 
 * **Ctrl + N**: Clear form and prepare for new component
 * **Ctrl + S**: Save/update selected component
@@ -226,7 +226,7 @@ Exported files are saved in the application directory or a user‑selected folde
 
 ---
 
-## 🚧 Error Handling and Validation
+## Error Handling and Validation
 
 * **Required Fields**: Name & Drawer Code are enforced; missing fields trigger a warning dialog
 * **Quantity Parsing**: Non-numeric entries display an error
@@ -237,7 +237,7 @@ All dialogs use Tkinter `messagebox` for consistent look-and-feel.
 
 ---
 
-## 🧩 Extending the Application
+## Extending the Application
 
 To add new features or adapt behavior:
 
@@ -254,7 +254,7 @@ Follow PEP 8 style and include tests or sample data when contributing.
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork this repo
 2. Create a branch: `git checkout -b feature/awesome`
@@ -266,7 +266,7 @@ Please describe your changes clearly and reference any related issues.
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
