@@ -1,15 +1,16 @@
 # config.py
 
-import json, os
-import sys
+import os, sys, json
 
-def resource_path(relative_path):
+def resource_path(rel_path):
     """
-    PyInstaller --onefile veya --onedir modunda, dosyalar
-    sys._MEIPASS içinde açılır. Geliştirme ortamında ise current dir.
+    PyInstaller --onefile veya --onedir modunda,
+    kaynak dosyalar sys._MEIPASS altında açılır.
+    Geliştirme modunda ise çalıştığın klasör.
     """
-    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
-    return os.path.join(base_path, relative_path)
+    base = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    return os.path.join(base, rel_path)
+
 
 # Mevcut sabitlerin yanında:
 DB_NAME  = "components.db"

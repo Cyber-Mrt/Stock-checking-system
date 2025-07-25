@@ -12,17 +12,22 @@ import os
 
 # config.APP_DIR ile gelen yolu kesin oluştur
 os.makedirs(APP_DIR, exist_ok=True)
-
-
+DEV_DB = os.path.join(APP_DIR, DB_NAME)
+PKG_DB = resource_path(DB_NAME)
 
 # Eğer APP_DIR’yi kullanmaya devam edeceksen:
-os.makedirs(APP_DIR, exist_ok=True)
 LOCAL_DB_PATH = os.path.join(APP_DIR, DB_NAME)
 
 # Ancak PyInstaller paketinden doğrudan exe yanından okumak için:
 # LOCAL_DB_PATH = resource_path(DB_NAME)
-ORIGINAL_DB_PATH = os.path.join(os.path.dirname(__file__), DB_NAME)
 
+ORIGINAL_DB_PATH = os.path.join(os.path.dirname(__file__), DB_NAME)
+def get_db_path():
+    # Eğer exe içinden çalışıyorsan PKG_DB varlığını öncelikle kontrol et
+    if os.path.exists(PKG_DB):
+        return PKG_DB
+    # Yoksa geliştirme ortamındaki lokali kullan
+    return DEV_DB
 
 # Eğer AppData'da yoksa, orijinal veritabanını kopyala
 if not os.path.exists(LOCAL_DB_PATH):
@@ -31,6 +36,14 @@ if not os.path.exists(LOCAL_DB_PATH):
         print("Veritabanı AppData dizinine kopyalandı.")
     except Exception as e:
         print(f"Veritabanı kopyalanamadı: {e}")
+
+# Eğer geliştirme ortamında DB’nin APP_DIR’e kopyalanmasını istiyorsan:
+if not os.path.exists(DEV_DB):
+    try:
+        shutil.copy(os.path.join(os.path.dirname(__file__), DB_NAME), DEV_DB)
+        print("Dev DB kopyalandı:", DEV_DB)
+    except Exception as e:
+        print("Dev DB kopyalanamadı:", e)
 
 def get_category_counts():
     """
@@ -66,29 +79,30 @@ def component_exists(name, drawer_code):
     return row is not None
 
 def create_connection():
+    db_path = get_db_path()
     try:
-        return sqlite3.connect(LOCAL_DB_PATH)
+        return sqlite3.connect(db_path)
     except sqlite3.Error as e:
-        print(f"Database connection error: {e}")
+        print(f"[DB ERROR] Bağlanamadı: {db_path} — {e}")
         return None
 
 def execute_query(query, params=(), fetch=None):
-    """A central function to execute database queries."""
-    with create_connection() as conn:
-        if conn is None:
-            return None if fetch else False
-        try:
-            cursor = conn.cursor()
-            cursor.execute(query, params)
-            if fetch == "one":
-                return cursor.fetchone()
-            if fetch == "all":
-                return cursor.fetchall()
-            conn.commit()
-            return True # Indicates success for non-fetch queries
-        except sqlite3.Error as e:
-            print(f"Query failed: {e}")
-            return None if fetch else False
+    conn = create_connection()
+    if conn is None:
+        # Bağlantı yoksa
+        return [] if fetch == "all" else None
+    try:
+        cur = conn.cursor()
+        cur.execute(query, params)
+        if fetch == "one":
+            return cur.fetchone()
+        if fetch == "all":
+            return cur.fetchall() or []   # kesinlikle liste dön
+        conn.commit()
+        return True
+    except sqlite3.Error as e:
+        print(f"[SQL ERROR] {e} — Query: {query}")
+        return [] if fetch == "all" else None
 
 
 def setup_database():
@@ -132,9 +146,13 @@ def setup_database():
 # --- Component Data Functions ---
 
 def get_all_components(order_by="name"):
-    """Fetches all components from the database."""
     query = f"SELECT {', '.join(COLUMNS)} FROM components ORDER BY {order_by}"
-    return execute_query(query, fetch="all")
+    dbp = get_db_path()
+    print(f"[DEBUG] get_all_components bağlanıyor: {dbp} (exists? {os.path.exists(dbp)})")
+    rows = execute_query(query, fetch="all")
+    print(f"[DEBUG] get_all_components döndü: {rows!r}")
+    return rows
+
 
 def add_component(data):
     """Adds a new component to the database."""
