@@ -10,6 +10,7 @@ import sys
 import csv
 import datetime
 from pathlib import Path  # Modern, object-oriented way to handle file paths
+from db_handler import execute_query
 
 # Third-party libraries
 import sv_ttk
