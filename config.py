@@ -1,54 +1,69 @@
 # config.py
+import os
+import sys
+import json
 
-import os, sys, json
-
-def resource_path(rel_path):
-    """
-    PyInstaller --onefile veya --onedir modunda,
-    kaynak dosyalar sys._MEIPASS altında açılır.
-    Geliştirme modunda ise çalıştığın klasör.
-    """
-    base = getattr(sys, '_MEIPASS', os.path.abspath("."))
+# -----------------------------
+# Kaynak yolu (PyInstaller uyumlu)
+# -----------------------------
+def resource_path(rel_path: str) -> str:
+    base = getattr(sys, "_MEIPASS", os.path.abspath("."))
     return os.path.join(base, rel_path)
 
-
-# Mevcut sabitlerin yanında:
-DB_NAME  = "components.db"
-COLUMNS  = ["id", "name", "category", "drawer_code", "quantity", "datasheet", "description", "image_path", "added_date"]
-APP_DIR  = os.path.join(os.path.expanduser("~"), "AppData", "Local", "ComponentTracker")
-
-# Uygulama dizininde "components.db" adında bir SQLite dosyası kullan
-DB_FILE = os.path.join(os.path.dirname(__file__), "components.db")
-
-# Bu satırı config.py dosyanıza ekleyin
-IMAGE_PREVIEW_SIZE = (200, 200)
-
-# AppData dizini içinde özel klasör oluştur
-APP_DIR = os.path.join(os.getenv("LOCALAPPDATA"), "ComponentTracker")
+# -----------------------------
+# Uygulama dizinleri / dosyalar
+# -----------------------------
+# Windows için AppData\Local, diğer platformlarda HOME altı
+LOCAL_APPDATA = os.getenv("LOCALAPPDATA") or os.path.expanduser("~")
+APP_DIR = os.path.join(LOCAL_APPDATA, "ComponentTracker")
 os.makedirs(APP_DIR, exist_ok=True)
 
+# Ayar dosyası
 SETTINGS_FILE = os.path.join(os.path.expanduser("~"), ".component_tracker_settings.json")
 DEFAULT_SETTINGS = {
     "window_size": (1300, 750),
     "column_widths": {},
-    "theme": "dark"  
+    "theme": "dark",
 }
 
 def load_settings():
-    if os.path.exists(SETTINGS_FILE):
-        return json.load(open(SETTINGS_FILE))
+    try:
+        if os.path.exists(SETTINGS_FILE):
+            with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception:
+        pass
     return DEFAULT_SETTINGS.copy()
 
-def save_settings(settings):
-    with open(SETTINGS_FILE, "w") as f:
+def save_settings(settings: dict) -> None:
+    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
         json.dump(settings, f, indent=2)
 
+# -----------------------------
+# Veritabanı
+# -----------------------------
 DB_NAME = "components.db"
+# Uygulama klasörü yerine proje kökünde tutmak istersen:
+DB_FILE = os.path.join(os.path.dirname(__file__), DB_NAME)
+# db_handler zaten kendi yolunu kullanıyorsa DB_FILE’ı yalnızca referans amaçlı bırak.
 
-# Define columns in the order they appear in the database and Treeview
-COLUMNS = ("id", "name", "category", "drawer_code", "quantity", "datasheet", "description", "added_date", "image_path")
+# -----------------------------
+# Sütunlar (DB SIRASIYLA)
+# ÖNEMLİ: Bu sıra veritabanı şemanla birebir aynı olmalı.
+# -----------------------------
+COLUMNS = (
+    "id",
+    "name",
+    "category",
+    "drawer_code",
+    "quantity",
+    "datasheet",
+    "description",
+    "added_date",
+    "image_path",
+)
 
-# Display names for Treeview headings
+# Başlıklar (Treeview)
 COLUMN_TITLES = {
     "id": "ID",
     "name": "NAME",
@@ -58,22 +73,23 @@ COLUMN_TITLES = {
     "datasheet": "DATASHEET",
     "description": "DESCRIPTION",
     "added_date": "ADDED DATE",
-    "image_path": "IMAGE" # Hidden by default, but defined
+    "image_path": "IMAGE",  # genelde gizli
 }
 
-# Widths for Treeview columns
+# Genişlikler (istediğini özelleştir)
 COLUMN_WIDTHS = {
     "id": 40,
-    "name": 150,
-    "category": 100,
-    "drawer_code": 100,
-    "quantity": 60,
-    "datasheet": 150,
-    "description": 200,
-    "added_date": 90
+    "name": 180,
+    "category": 120,
+    "drawer_code": 120,
+    "quantity": 70,
+    "datasheet": 180,
+    "description": 220,
+    "added_date": 110,
+    "image_path": 160,
 }
 
-# Labels for the input form. The key is what we use in code, the value is the display text.
+# Form etiketleri
 FORM_LABELS = {
     "name": "Name*",
     "category": "Category",
@@ -81,5 +97,37 @@ FORM_LABELS = {
     "quantity": "Quantity*",
     "datasheet": "Datasheet",
     "description": "Description",
-    "image_path": "Image Path"
+    "image_path": "Image Path",
+    "added_date": "Added Date (YYYY-MM-DD)",
 }
+
+# -----------------------------
+# Görsel önizleme
+# -----------------------------
+IMAGE_PREVIEW_SIZE = (200, 200)
+
+# -----------------------------
+# İş mantığı ayarları
+# -----------------------------
+LOW_STOCK_THRESHOLD = 2
+
+# -----------------------------
+# QR ayarları (termal yazıcı dostu)
+# -----------------------------
+QR_DEFAULT_SCALE = 4          # ~8-10 box_size termal için iyi başlar
+QR_BORDER = 2                 # kenar boşluğu (modül sayısı)
+# Etiket dosya adı formatı (PNG). Güvenli dosya adı için main_app sanitize ediyor.
+QR_FILENAME_FORMAT = "QR_{drawer_code}_{name}_{id}.png"
+
+# --- QR payload görünümü ---
+# "pretty": Satırlı, okunaklı metin | "json": JSON string
+QR_PAYLOAD_STYLE = "pretty"
+
+# Pretty moda özel şablon (istediğin gibi düzenleyebilirsin)
+QR_PRETTY_TEMPLATE = (
+    "{name}  |  {drawer_code}\n"
+    "Qty: {quantity}    ID: {id}\n"
+    "Cat: {category}\n"
+    "Added: {added_date}\n"
+    "ComponentTracker"
+)

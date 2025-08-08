@@ -202,3 +202,4 @@ def search_components(search_term, category):
 
     query += " ORDER BY name"
     return execute_query(query, params, fetch="all")
+
